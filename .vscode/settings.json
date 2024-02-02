@@ -1,0 +1,33 @@
+{
+  "editor.tabSize": 2,
+  "files.trimTrailingWhitespace": true,
+  "editor.formatOnSave": false,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "workbench.colorCustomizations": {
+    "statusBar.background": "#3c873a",
+    "statusBarItem.hoverBackground": "#68a063",
+    "statusBar.foreground": "#e7e7e7",
+    "activityBar.activeBackground": "#68a063",
+    "activityBar.activeBorder": "#82dc9b",
+    "activityBar.background": "#68a063",
+    "activityBar.foreground": "#303030",
+    "activityBar.inactiveForeground": "#30303099",
+    "activityBarBadge.background": "#82dc9b",
+    "activityBarBadge.foreground": "#303030",
+    "titleBar.activeBackground": "#3c873a",
+    "titleBar.activeForeground": "#e7e7e7",
+    "titleBar.inactiveBackground": "#3c873a99",
+    "titleBar.inactiveForeground": "#e7e7e799"
+  },
+  "search.exclude": {
+    "**/lib": true,
+    "**/node_modules": true,
+    ".yarn-packages-cache": true
+  },
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": false,
+  "typescript.format.insertSpaceAfterOpeningAndBeforeClosingEmptyBraces": true,
+  "typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": false
+}

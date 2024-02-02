@@ -1,0 +1,14 @@
+# Compiled JavaScript files
+*/lib/**/*.js
+*/lib/**/*.js.map
+
+# TypeScript v1 declaration files
+typings/
+
+# Node.js dependency directory
+node_modules/
+
+# GCP service account key json files
+rf-app-dev-7145f-a270458d3aca.json
+
+**/ui-debug.log

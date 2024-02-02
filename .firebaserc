@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "default": "rf-app-dev-7145f",
+    "prod": "rfd-app-prod-1fdad"
+  }
+}

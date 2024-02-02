@@ -1,9 +1,17 @@
 {
   "name": "rfd-cloud-functions",
   "private": true,
-  "workspaces": [
-    "functions/*"
-  ],
+  "workspaces": {
+    "packages": [
+      "func-core"
+    ],
+    "nohoist": [
+      "**/firebase-admin",
+      "**/firebase-admin/**",
+      "**/firebase-functions",
+      "**/firebase-functions/**"
+    ]
+  },
   "engines": {
     "node": "18"
   },
@@ -14,6 +22,5 @@
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-import": "^2.25.4",
     "typescript": "^4.9.0"
-  },
-  "version": "0.0.0"
+  }
 }
