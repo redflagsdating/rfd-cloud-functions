@@ -11,4 +11,5 @@ node_modules/
 # GCP service account key json files
 rf-app-dev-7145f-a270458d3aca.json
 
-**/ui-debug.log
+# Firebase emulators debug log
+**/*-debug.log

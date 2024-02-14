@@ -1,9 +1,12 @@
 {
   "editor.tabSize": 2,
   "files.trimTrailingWhitespace": true,
-  "editor.formatOnSave": false,
+  "editor.formatOnSave": true,
+  "editor.rulers": [
+    80
+  ],
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
+    "source.fixAll.eslint": "explicit"
   },
   "workbench.colorCustomizations": {
     "statusBar.background": "#3c873a",
@@ -29,5 +32,16 @@
   "typescript.tsdk": "node_modules/typescript/lib",
   "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": false,
   "typescript.format.insertSpaceAfterOpeningAndBeforeClosingEmptyBraces": true,
-  "typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": false
+  "typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": false,
+  "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+  "cSpell.words": [
+    "Firestore",
+    "uids"
+  ],
+  "editor.wordWrap": "wordWrapColumn",
+  "editor.wrappingIndent": "indent",
+  "markdown.editor.pasteUrlAsFormattedLink.enabled": "smartWithSelection",
+  "[markdown]": {
+    "files.autoSave": "afterDelay"
+  }
 }
