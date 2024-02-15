@@ -1,7 +1,6 @@
 /* eslint-disable max-len */
 import {getFirestore} from "firebase-admin/firestore";
 import {logger} from "firebase-functions/v1";
-import {onDocumentCreated} from "firebase-functions/v2/firestore";
 import {onRequest} from "firebase-functions/v2/https";
 
 const QUESTIONS = [
@@ -128,7 +127,7 @@ function _getQod(excludedQod?: Array<string>): string {
  * @return {Promise<FirebaseFirestore.DocumentData | undefined>}
  * @throws Error If the provided input is not valid Firestore data.
  */
-export async function _addQod(connectionId: string): Promise<FirebaseFirestore.DocumentData | undefined> {
+async function addQodFunc(connectionId: string): Promise<FirebaseFirestore.DocumentData | undefined> {
   const current = new Date();
   const connectionDocRef = getFirestore().collection("connection").doc(connectionId);
   const connectionData = (await connectionDocRef.get()).data();
@@ -163,7 +162,7 @@ export async function _addQod(connectionId: string): Promise<FirebaseFirestore.D
 /**
  * API endpoint - /addQod?connectionId=Wf84j3we20k3ee
  */
-export const addQod = onRequest(async (req, res) => {
+const addQod = onRequest(async (req, res) => {
   // Bad request error message. Follow Google JSON data schema.
   // https://google.github.io/styleguide/jsoncstyleguide.xml#JSON_Structure_&_Reserved_Property_Names
   let message;
@@ -185,7 +184,7 @@ export const addQod = onRequest(async (req, res) => {
   }
 
   try {
-    const data = await _addQod(connectionId as string);
+    const data = await addQodFunc(connectionId as string);
     logger.debug(`New QoD has been added for connection "${connectionId}"`);
     res.status(200).json({data});
   } catch (error) {
@@ -194,26 +193,5 @@ export const addQod = onRequest(async (req, res) => {
   }
 });
 
-/**
- * Add QoD at connection.onDocumentCreated trigger
- */
-export const addQodOnCreated = onDocumentCreated(
-  "connection/{connectionId}",
-  async (event) => {
-    const snapshot = event.data;
-    const connectionId = event.params.connectionId;
+export {addQod, addQodFunc};
 
-    logger.debug(`connection "${connectionId}" document created`);
-
-    if (snapshot != null) {
-      try {
-        await _addQod(connectionId);
-        logger.debug(`New QoD has been added for connection "${connectionId}"`);
-      } catch (error) {
-        logger.error(error);
-      }
-    } else {
-      logger.error(`<QueryDocumentSnapshot> of the connection (${connectionId}) is null`);
-    }
-  }
-);
