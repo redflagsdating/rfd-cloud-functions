@@ -22,7 +22,7 @@
     "node": "18"
   },
   "lint-staged": {
-    "functions/**/*.js|ts": "yarn lint"
+    "functions/**/*.js|ts": "yarn lint; yarn test:ci"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.12.0",
