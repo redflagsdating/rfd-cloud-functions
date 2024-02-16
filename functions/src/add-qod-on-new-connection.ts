@@ -8,21 +8,18 @@ import {addQodFunc} from "./api/add-qod";
 export const addQodOnNewConnection = onDocumentCreated(
   "connection/{connectionId}",
   async (event) => {
-    const snapshot = event.data;
     const connectionId = event.params.connectionId;
 
     logger.debug(`connection "${connectionId}" document created`);
 
-    if (snapshot != null) {
+    if (connectionId) {
       try {
         await addQodFunc(connectionId);
       } catch (error) {
-        logger.error(error);
+        logger.error(error instanceof Error ? error.message : error);
       }
     } else {
-      logger.error(
-        `<QueryDocumentSnapshot> of the connection (${connectionId}) is null`
-      );
+      logger.error("connectionId is null");
     }
   }
 );

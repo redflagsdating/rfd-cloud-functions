@@ -23,9 +23,8 @@ by **Firebase Cloud Functions** (Serverless).
 - [Firebase](https://firebase.google.com/)
 - [Cloud Functions](https://firebase.google.com/docs/functions)
 - Typescript (Javascript)
+- Jest
 - [JDK](https://www.oracle.com/java/technologies/downloads)
-- [Mocha](https://mochajs.org/)
-- [Chai](https://www.chaijs.com/)
 
 ## Folder Structure
 
@@ -34,18 +33,19 @@ by **Firebase Cloud Functions** (Serverless).
     ├── functions/                            # Cloud function workspace
     │   ├── src/                              # All cloud functions
     │   │   ├── index.ts                      # Initialization and export cloud functions
+    │   │   ├── add-qod-on-new-connection.ts  # Event-triggered cloud functions (top level)
+    │   │   ├── update-connection-on-schedule.ts
+    │   │   ├── ...
     │   │   │
     │   │   ├── api/                          # RESTful API cloud functions
     │   │   │   ├── add-qod.ts                # e.g. /addQod?connectionId=Wf84j3we20k3ee
     │   │   │   └── ...
     │   │   │
-    │   │   ├── add-qod-on-new-connection.ts  # Event-triggered cloud functions (top level)
-    │   │   ├── update-connection-on-schedule.ts
-    │   │   └── ...
+    │   │   └── __tests__/                    # Jest unit tests
+    │   │      ├── add-qod-on-new-connection.test.ts
+    │   │      └── ...
     │   │
-    │   ├── test/                             # Unit tests
-    │   │   ├── api/add-qod.spec.ts
-    │   │   └── ...
+    │   ├── jest.config.js
     │   │
     │   └── ...
     │
@@ -53,7 +53,6 @@ by **Firebase Cloud Functions** (Serverless).
     ├── firebase.json                     # Describes properties for your project. Use `firebase init` command to update it.
     ├── firestore.indexes.json            # Generate via "firebase init firestore" command
     ├── firestore.rules                   # Generate via "firebase init firestore" command
-    ├── .mocharc.yml                      # Mocha test config
     └── ...
 ```
 
