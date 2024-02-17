@@ -1,10 +1,10 @@
 import {expect, test} from "@jest/globals";
 import firebaseFunctionsTest from "firebase-functions-test";
 import {logger} from "firebase-functions/v2";
-import * as addQodApi from "../api/add-qod";
+import * as addQodApi from "../src/api/add-qod";
 
 // Ensure to import cloud functions from top level for admin.initializeApp()
-import {addQodOnNewConnection} from "../index";
+import {addQodOnNewConnection} from "../src/index";
 
 const {wrap, firestore} = firebaseFunctionsTest();
 
@@ -24,7 +24,7 @@ describe("Cloud Function [trigger] > addQodOnNewConnection", () => {
     mockError.mockReset();
   });
 
-  test("should trigger addQodFunc with connectionId param", () => {
+  test("should trigger addQodFunc with connectionId param", async () => {
     const addQodFuncSpy = jest.spyOn(addQodApi, "addQodFunc");
 
     addQodFuncSpy.mockImplementation((connectionId) => {
@@ -32,11 +32,11 @@ describe("Cloud Function [trigger] > addQodOnNewConnection", () => {
       return Promise.resolve(undefined);
     });
 
-    wrapped({data: snapshot, params});
+    await wrapped({data: snapshot, params});
     expect(addQodFuncSpy).toBeCalledWith(snapshot.id);
   });
 
-  test("should trigger addQodFunc with error", () => {
+  test("should trigger addQodFunc with error", async () => {
     const errorMsg = "Test catching error from addQodFunc";
     const addQodFuncSpy = jest.spyOn(addQodApi, "addQodFunc");
 
@@ -44,13 +44,14 @@ describe("Cloud Function [trigger] > addQodOnNewConnection", () => {
       throw Error(errorMsg);
     });
 
-    wrapped({data: snapshot, params});
+    await wrapped({data: snapshot, params});
+
     expect(mockError).toBeCalledTimes(1);
     expect(mockError).toBeCalledWith(errorMsg);
   });
 
-  test("should log error when connectionId is null", () => {
-    wrapped();
+  test("should log error when connectionId is null", async () => {
+    await wrapped();
 
     expect(mockError).toBeCalledTimes(1);
     expect(mockError).toBeCalledWith("connectionId is null");

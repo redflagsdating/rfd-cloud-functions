@@ -133,6 +133,7 @@ https://www.oracle.com/java/technologies/downloads
 - *Install dependent packages*
 - *Change Git Hooks path*
 - *Config `git` user info*
+- *Download* Firebase dev service keys for unit test
 
 ```bash
 # Clone the repo
@@ -164,6 +165,13 @@ git config core.hooksPath .githooks/
 git config --global user.name "John Smith"
 git config --global user.email john@redflagsdating.com
 ```
+
+Go to `rfd-app-config` [repo](https://github.com/redflagsdating/rfd-app-config/blob/main/dev/rf-app-dev-7145f-serviceKeys.json) to download Firebase `dev` project service keys JSON file and save it as `rf-app-dev-7145f-serviceKeys.json` at the top level for unit tests.
+
+```bash
+{PATH}/rfd-cloud-functions/rf-app-dev-7145f-serviceKeys.json
+```
+
 
 ### Run
 

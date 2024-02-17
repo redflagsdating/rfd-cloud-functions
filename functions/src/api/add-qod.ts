@@ -162,36 +162,38 @@ async function addQodFunc(connectionId: string): Promise<FirebaseFirestore.Docum
 /**
  * API endpoint - /addQod?connectionId=Wf84j3we20k3ee
  */
-const addQod = onRequest(async (req, res) => {
+const addQod = onRequest(
+  {concurrency: 1},
+  async (req, res) => {
   // Bad request error message. Follow Google JSON data schema.
   // https://google.github.io/styleguide/jsoncstyleguide.xml#JSON_Structure_&_Reserved_Property_Names
-  let message;
-  const connectionId = req.query.connectionId;
+    let message;
+    const connectionId = req.query.connectionId;
 
-  if (!connectionId) {
-    message =
+    if (!connectionId) {
+      message =
     `Query parameter "connectionId" (${typeof connectionId}) is not provided`;
-  } else if (typeof connectionId != "string") {
-    message =
+    } else if (typeof connectionId != "string") {
+      message =
     `Query parameter "connectionId" (${typeof connectionId}) is not a string`;
-  }
+    }
 
-  // Has error message
-  if (message) {
-    logger.debug(message);
-    res.status(400).json({error: {code: 400, message}});
-    return;
-  }
+    // Has error message
+    if (message) {
+      logger.debug(message);
+      res.status(400).json({error: {code: 400, message}});
+      return;
+    }
 
-  try {
-    const data = await addQodFunc(connectionId as string);
-    logger.debug(`New QoD has been added for connection "${connectionId}"`);
-    res.status(200).json({data});
-  } catch (error) {
-    logger.error(error);
-    res.status(500).json({error});
-  }
-});
+    try {
+      const data = await addQodFunc(connectionId as string);
+      logger.debug(`New QoD has been added for connection "${connectionId}"`);
+      res.status(200).json({data});
+    } catch (error) {
+      logger.error(error);
+      res.status(500).json({error});
+    }
+  });
 
 export {addQod, addQodFunc};
 

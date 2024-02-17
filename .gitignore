@@ -9,7 +9,7 @@ typings/
 node_modules/
 
 # GCP service account key json files
-rf-app-dev-7145f-a270458d3aca.json
+rf-app-dev-7145f-*.json
 
 # Firebase emulators debug log
 **/*-debug.log

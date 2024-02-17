@@ -34,14 +34,14 @@ export const updateUserOnDisconnected = onDocumentUpdated(
           const connections = connectionsA.filter((id) => id !== uidB);
 
           logger.debug(`Update user "${snapshotA.id}" with ${connections}`);
-          await docRefA.set({connections});
+          await docRefA.update({connections});
         }
 
         if (connectionsB && connectionsB.length) {
           const connections = connectionsB.filter((id) => id !== uidA);
 
           logger.debug(`Update user "${snapshotB.id}" with ${connections}`);
-          await docRefB.set(
+          await docRefB.update(
             {connections}
           );
         }

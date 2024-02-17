@@ -7,11 +7,11 @@
     "build": "tsc",
     "build:watch": "tsc --watch",
     "serve": "yarn build && firebase emulators:start --only firestore,functions,pubsub",
-    "shell": "yarn build && firebase functions:shell",
+    "shell": "yarn build && GOOGLE_APPLICATION_CREDENTIALS=\"../rf-app-dev-7145f-serviceKeys.json\" firebase functions:shell",
     "start": "yarn shell",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
-    "test": "jest --watch --silent",
+    "test": "jest --watch",
     "test:ci": "jest --silent"
   },
   "engines": {
