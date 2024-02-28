@@ -65,7 +65,7 @@ describe("Cloud Function [http] > addQoD", () => {
     expect(error).not.toBeNull();
     expect(error?.code).toEqual(400);
     expect(error?.message).toEqual(
-      "Query parameter \"connectionId\" (undefined) is not provided"
+      "Query param \"connectionId\" is (undefined)"
     );
   });
 });

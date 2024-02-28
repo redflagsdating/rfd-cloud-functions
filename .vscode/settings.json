@@ -36,6 +36,8 @@
   "editor.defaultFormatter": "dbaeumer.vscode-eslint",
   "cSpell.words": [
     "Firestore",
+    "latlng",
+    "TYPESENSE",
     "uids"
   ],
   "editor.wordWrap": "wordWrapColumn",

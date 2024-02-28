@@ -1,6 +1,6 @@
 /* eslint-disable max-len */
 import {getFirestore} from "firebase-admin/firestore";
-import {logger} from "firebase-functions/v1";
+import {logger} from "firebase-functions/v2";
 import {onRequest} from "firebase-functions/v2/https";
 
 const QUESTIONS = [
@@ -163,7 +163,6 @@ async function addQodFunc(connectionId: string): Promise<FirebaseFirestore.Docum
  * API endpoint - /addQod?connectionId=Wf84j3we20k3ee
  */
 const addQod = onRequest(
-  {concurrency: 1},
   async (req, res) => {
   // Bad request error message. Follow Google JSON data schema.
   // https://google.github.io/styleguide/jsoncstyleguide.xml#JSON_Structure_&_Reserved_Property_Names
@@ -171,15 +170,7 @@ const addQod = onRequest(
     const connectionId = req.query.connectionId;
 
     if (!connectionId) {
-      message =
-    `Query parameter "connectionId" (${typeof connectionId}) is not provided`;
-    } else if (typeof connectionId != "string") {
-      message =
-    `Query parameter "connectionId" (${typeof connectionId}) is not a string`;
-    }
-
-    // Has error message
-    if (message) {
+      message = `Query param "connectionId" is (${typeof connectionId})`;
       logger.debug(message);
       res.status(400).json({error: {code: 400, message}});
       return;
