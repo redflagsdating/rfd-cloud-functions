@@ -1,8 +1,7 @@
 import {getFirestore} from "firebase-admin/firestore";
 import {defineInt, defineString} from "firebase-functions/params";
 import {logger} from "firebase-functions/v2";
-import {onRequest} from "firebase-functions/v2/https";
-import {rfdErrorCodes} from "../error/error-codes";
+import {HttpsError, onCall} from "firebase-functions/v2/https";
 
 const searchHost = defineString("TYPESENSE_HOST");
 const searchApiKey = defineString("TYPESENSE_API_KEY");
@@ -80,29 +79,22 @@ async function searchNewConnectionsFunc(
 }
 
 /**
- * API endpoint - /searchNewConnections?uid=Wf84j3we20k3ee&limits=3
+ * searchNewConnections HTTP Callable function.
+ * (Call from Firebase Function client SDK)
  */
-const searchNewConnections = onRequest(
-  async (req, res) => {
+const searchNewConnections = onCall<{limits?: number}>(
+  async (request) => {
     let message;
 
-    const uid = req.query.uid;
-    const limits = typeof req.query.limits == "string" ?
-      req.query.limits : maxUserConnections.toString();
+    const uid = request.auth?.uid;
+    const limits = request.data.limits ?? maxUserConnections;
     const userCollectionRef = getFirestore().collection("users");
 
     if (!uid) {
-      message = `Query parameter "uid" (${typeof uid}) is not provided`;
+      message = "request.auth.uid is undefined";
 
       logger.debug(message);
-      res.status(400).json({
-        error: {
-          code: rfdErrorCodes[rfdErrorCodes.ERR_INVALID_ARGUMENT],
-          message,
-        },
-      });
-
-      return;
+      throw new HttpsError("unauthenticated", message, {status: 401});
     }
 
     const userModel = (await userCollectionRef.doc(uid as string).get()).data();
@@ -111,24 +103,18 @@ const searchNewConnections = onRequest(
       message = `User (uid=${uid}) document not found`;
 
       logger.error(message);
-      res.status(404).json({
-        error: {
-          code: rfdErrorCodes[rfdErrorCodes.ERR_NOT_FOUND],
-          message,
-        },
-      });
-
-      return;
+      throw new HttpsError("not-found", message, {status: 404});
     }
 
     const response = await searchNewConnectionsFunc(userModel, limits);
     const status = response.status;
-    const json =await response.json();
-    const data = status === 200 ?
-      {data: json.hits as TypesenseHits} :
-      {error: {code: rfdErrorCodes[rfdErrorCodes.ERR_INTERNAL], message: json}};
+    const json = await response.json();
 
-    res.status(status).json(data);
+    if (status === 200) {
+      return json.hits;
+    } else {
+      throw new HttpsError("internal", json.message, {status});
+    }
   }
 );
 

@@ -1,8 +1,7 @@
 import {getFirestore} from "firebase-admin/firestore";
 import {defineInt} from "firebase-functions/params";
 import {logger} from "firebase-functions/v2";
-import {HttpsError, onRequest} from "firebase-functions/v2/https";
-import {rfdErrorCodes} from "../error/error-codes";
+import {HttpsError, onCall} from "firebase-functions/v2/https";
 import {searchNewConnectionsFunc} from "./search-new-connections";
 
 const maxUserConnections = defineInt("MAX_USER_CONNECTIONS").value();
@@ -163,7 +162,7 @@ async function addNewConnectionsFunc(uid: string) {
       );
     }
 
-    return results;
+    return results.map((ref) => ref.id);
   } else {
     await rollback();
 
@@ -176,47 +175,32 @@ async function addNewConnectionsFunc(uid: string) {
 }
 
 /**
- * API endpoint - /addNewConnections?uid=Wf84j3we20k3ee
+ * addNewConnections HTTP Callable function.
+ * (Call from Firebase Function client SDK)
  */
-const addNewConnections = onRequest(
-  async (req, res) => {
-    const uid = req.query.uid;
+const addNewConnections = onCall(
+  async (request) => {
+    const uid = request.auth?.uid;
 
-    if (!uid || typeof uid !== "string") {
-      const message = `Query parameter "uid" (${typeof uid}) is not provided`;
+    if (!uid) {
+      const message = "request.auth.uid is undefined";
 
       logger.debug(message);
-      res.status(400).json(
-        {
-          error: {
-            code: rfdErrorCodes[rfdErrorCodes.ERR_INVALID_ARGUMENT], message,
-          },
-        }
-      );
-      return;
+      throw new HttpsError("unauthenticated", message, {status: 401});
     }
 
     try {
-      const results = await addNewConnectionsFunc(uid);
-
-      res.status(200).json({data: results});
+      return await addNewConnectionsFunc(uid);
     } catch (error) {
       logger.error(error);
 
       if (error instanceof HttpsError) {
-        const {code: fnErrorCode, message, details} = error;
-        const {status} = details as {status: number};
-        const code = fnErrorCode.toString().replace("-", "_").toUpperCase();
-
-        res.status(status).json({error: {code: `ERR_${code}`, message}});
+        throw error;
       } else {
-        res.status(500).json(
-          {
-            error: {
-              code: rfdErrorCodes[rfdErrorCodes.ERR_INTERNAL],
-              message: (error as Error)?.message,
-            },
-          }
+        throw new HttpsError(
+          "internal",
+          (error as Error)?.message,
+          {status: 500}
         );
       }
     }

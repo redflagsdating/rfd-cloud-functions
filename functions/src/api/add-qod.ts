@@ -1,8 +1,7 @@
 /* eslint-disable max-len */
 import {getFirestore} from "firebase-admin/firestore";
 import {logger} from "firebase-functions/v2";
-import {onRequest} from "firebase-functions/v2/https";
-import {rfdErrorCodes} from "../error/error-codes";
+import {HttpsError, onCall} from "firebase-functions/v2/https";
 
 const QUESTIONS = [
   "Do you think you've changed over the last two years?",
@@ -161,36 +160,43 @@ async function addQodFunc(connectionId: string): Promise<FirebaseFirestore.Docum
 
 
 /**
- * API endpoint - /addQod?connectionId=Wf84j3we20k3ee
+ * addQod HTTP Callable function.
+ * (Call from Firebase Function client SDK)
  */
-const addQod = onRequest(
-  async (req, res) => {
+const addQod = onCall<{connectionId?: string}>(
+  async (request) => {
   // Bad request error message. Follow Google JSON data schema.
   // https://google.github.io/styleguide/jsoncstyleguide.xml#JSON_Structure_&_Reserved_Property_Names
     let message;
-    const connectionId = req.query.connectionId;
+
+    const uid = request.auth?.uid;
+    const connectionId = request.data.connectionId;
+
+    if (!uid) {
+      message = "request.auth.uid is undefined";
+
+      logger.debug(message);
+      throw new HttpsError("unauthenticated", message, {status: 401});
+    }
 
     if (!connectionId) {
       message = `Query param "connectionId" is (${typeof connectionId})`;
       logger.debug(message);
-      res.status(400).json({
-        error: {
-          code: rfdErrorCodes[rfdErrorCodes.ERR_INVALID_ARGUMENT],
-          message,
-        },
-      });
-      return;
+      throw new HttpsError("invalid-argument", message, {status: 400});
     }
 
     try {
-      const data = await addQodFunc(connectionId as string);
       logger.debug(`New QoD has been added for connection "${connectionId}"`);
-      res.status(200).json({data});
+      return await addQodFunc(connectionId as string);
     } catch (error) {
       logger.error(error);
-      res.status(500).json({error});
+      throw new HttpsError(
+        "internal",
+        (error as Error)?.message,
+        {status: 500}
+      );
     }
   });
 
-export {addQod, addQodFunc};
+export {QUESTIONS, addQod, addQodFunc};
 

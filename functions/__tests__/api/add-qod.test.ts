@@ -3,7 +3,7 @@ import {getFirestore} from "firebase-admin/firestore";
 import firebaseFunctionsTest from "firebase-functions-test";
 
 // Ensure to import cloud functions from top level for admin.initializeApp()
-import {rfdErrorCodes} from "../../src/error/error-codes";
+import {QUESTIONS} from "../../src/api/add-qod";
 import {addQod} from "../../src/index";
 
 firebaseFunctionsTest({
@@ -14,31 +14,25 @@ describe("Cloud Function [http] > addQoD", () => {
   const connectionId = "eHQ27TioIAkNzcxQbaDX";
 
   test("should add a new QoD to the connection", async () => {
-    let newQod: Record<string, string> | undefined;
-
-    const req = {query: {connectionId}};
-    const res = {
-      status: (code: number) => {
-        expect(code).toEqual(200);
-
-        return {
-          json: ({data}: Record<string, unknown>) => {
-            newQod = data as Record<string, string>;
-          },
-        };
+    await addQod.run({
+      data: {connectionId},
+      auth: {
+        uid: "123",
+        token: {email: "test@gmail.com"} as any,
       },
-    };
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await addQod(req as any, res as any);
+      rawRequest: {} as any,
+    });
 
     const connectionCollectionRef = getFirestore().collection("connection");
     const connectionDocRef = connectionCollectionRef.doc(connectionId);
     const allQods = connectionDocRef.collection("qod")
       .orderBy("createdAt", "desc");
     const lastQod = (await allQods.get()).docs[0];
+    const question = lastQod.data().question;
 
-    expect(lastQod.data().question).toEqual(newQod?.question);
+    expect(question).not.toBeNull();
+    expect(lastQod.data().createdAt).not.toBeNull();
+    expect(QUESTIONS.includes(question)).toBeTruthy();
 
     // Remove the new QoD to clean up
     lastQod.ref.delete();
@@ -46,29 +40,23 @@ describe("Cloud Function [http] > addQoD", () => {
   });
 
   test("should return 400 and error message without connectionId", async () => {
-    let error: Record<string, string> | undefined;
-    const req = {query: {}};
-    const res = {
-      status: (code: number) => {
-        expect(code).toEqual(400);
+    try {
+      await addQod.run({
+        data: {},
+        auth: {
+          uid: "123",
+          token: {email: "test@gmail.com"} as any,
+        },
+        rawRequest: {} as any,
+      });
+    } catch (err) {
+      const error = err as any;
 
-        return {
-          json: ({error: _error}: Record<string, unknown>) => {
-            error = _error as Record<string, string>;
-          },
-        };
-      },
-    };
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await addQod(req as any, res as any);
-
-    expect(error).not.toBeNull();
-    expect(error?.code).toEqual(
-      rfdErrorCodes[rfdErrorCodes.ERR_INVALID_ARGUMENT]
-    );
-    expect(error?.message).toEqual(
-      "Query param \"connectionId\" is (undefined)"
-    );
+      expect(error).not.toBeNull();
+      expect(error?.details.status).toEqual(400);
+      expect(error?.message).toEqual(
+        "Query param \"connectionId\" is (undefined)"
+      );
+    }
   });
 });
