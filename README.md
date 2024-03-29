@@ -22,6 +22,7 @@ by **Firebase Cloud Functions** (Serverless).
 
 - [Firebase](https://firebase.google.com/)
 - [Cloud Functions](https://firebase.google.com/docs/functions)
+- [Typesense](docs/typesense.md)
 - Typescript (Javascript)
 - Jest
 - [JDK](https://www.oracle.com/java/technologies/downloads)
@@ -206,3 +207,4 @@ yarn workspace functions deploy
 
 - [Emulator](https://firebase.google.com/docs/emulator-suite/install_and_configure)
 - [Coding Convention](https://google.github.io/styleguide/jsoncstyleguide.xml#JSON_Structure_&_Reserved_Property_Names)
+- [Typesense search](/docs/typesense.md)

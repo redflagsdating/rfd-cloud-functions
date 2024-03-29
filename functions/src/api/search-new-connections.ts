@@ -2,6 +2,7 @@ import {getFirestore} from "firebase-admin/firestore";
 import {defineInt, defineString} from "firebase-functions/params";
 import {logger} from "firebase-functions/v2";
 import {onRequest} from "firebase-functions/v2/https";
+import {rfdErrorCodes} from "../error/error-codes";
 
 const searchHost = defineString("TYPESENSE_HOST");
 const searchApiKey = defineString("TYPESENSE_API_KEY");
@@ -40,6 +41,9 @@ async function searchNewConnectionsFunc(
   // Filter KYC verified users only
   searchParams.append("filter_by", "verified:true");
 
+  // Filter users less than maxUserConnections
+  searchParams.append("filter_by", `connectionsCount:<${maxUserConnections}`);
+
   // Filter matched genders only
   if (genderFor.length) {
     searchParams.append("filter_by", `gender:=[${genderFor}]`);
@@ -53,9 +57,9 @@ async function searchNewConnectionsFunc(
     searchParams.append("sort_by", `latlng(${latlngStr}):asc`);
   }
 
-  // Filter out already connected/disconnected users
+  // Filter out already connected/disconnected users and self
   if (uids.length) {
-    searchParams.append("filter_by", `id:!=[${uids}]`);
+    searchParams.append("filter_by", `id:!=[${uids.concat(userModel.id)}]`);
   }
 
   // TODO: Semantic search redFlags, greenFlags and realTalk
@@ -91,7 +95,12 @@ const searchNewConnections = onRequest(
       message = `Query parameter "uid" (${typeof uid}) is not provided`;
 
       logger.debug(message);
-      res.status(400).json({error: {code: 400, message}});
+      res.status(400).json({
+        error: {
+          code: rfdErrorCodes[rfdErrorCodes.ERR_INVALID_ARGUMENT],
+          message,
+        },
+      });
 
       return;
     }
@@ -102,7 +111,12 @@ const searchNewConnections = onRequest(
       message = `User (uid=${uid}) document not found`;
 
       logger.error(message);
-      res.status(404).json({error: {code: 404, message}});
+      res.status(404).json({
+        error: {
+          code: rfdErrorCodes[rfdErrorCodes.ERR_NOT_FOUND],
+          message,
+        },
+      });
 
       return;
     }
@@ -112,7 +126,7 @@ const searchNewConnections = onRequest(
     const json =await response.json();
     const data = status === 200 ?
       {data: json.hits as TypesenseHits} :
-      {error: {code: status, message: json}};
+      {error: {code: rfdErrorCodes[rfdErrorCodes.ERR_INTERNAL], message: json}};
 
     res.status(status).json(data);
   }

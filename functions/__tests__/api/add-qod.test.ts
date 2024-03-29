@@ -3,6 +3,7 @@ import {getFirestore} from "firebase-admin/firestore";
 import firebaseFunctionsTest from "firebase-functions-test";
 
 // Ensure to import cloud functions from top level for admin.initializeApp()
+import {rfdErrorCodes} from "../../src/error/error-codes";
 import {addQod} from "../../src/index";
 
 firebaseFunctionsTest({
@@ -63,7 +64,9 @@ describe("Cloud Function [http] > addQoD", () => {
     await addQod(req as any, res as any);
 
     expect(error).not.toBeNull();
-    expect(error?.code).toEqual(400);
+    expect(error?.code).toEqual(
+      rfdErrorCodes[rfdErrorCodes.ERR_INVALID_ARGUMENT]
+    );
     expect(error?.message).toEqual(
       "Query param \"connectionId\" is (undefined)"
     );

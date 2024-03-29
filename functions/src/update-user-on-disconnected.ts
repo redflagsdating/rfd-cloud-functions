@@ -1,6 +1,7 @@
 import {getFirestore} from "firebase-admin/firestore";
 import {logger} from "firebase-functions/v2";
 import {onDocumentUpdated} from "firebase-functions/v2/firestore";
+import {addNewConnectionsFunc} from "./api/add-new-connections";
 
 /**
  * Update user document "connections" field on disconnected
@@ -14,7 +15,7 @@ export const updateUserOnDisconnected = onDocumentUpdated(
     const wasConnected = before?.status === "connected";
     const isDisconnected = after?.status === "disconnected";
     const [uidA, uidB]: string[] = (after?.uids ?? []);
-    const collectionRef = getFirestore().collection("users");
+    const userCollectionRef = getFirestore().collection("users");
 
     logger.debug(`connection "${event.params.connectionId}" document updated`);
 
@@ -22,31 +23,33 @@ export const updateUserOnDisconnected = onDocumentUpdated(
       logger.debug(`Status has changed ${before?.status} -> ${after?.status}`);
       logger.debug(`Connection between "${uidA}" and "${uidB}"`);
 
-      const docRefA = collectionRef.doc(uidA);
-      const docRefB = collectionRef.doc(uidB);
-      const snapshotA = await docRefA.get();
-      const snapshotB = await docRefB.get();
-      const connectionsA: string[] | undefined = snapshotA.get("connections");
-      const connectionsB: string[] | undefined = snapshotB.get("connections");
+      const userDocRefA = userCollectionRef.doc(uidA);
+      const userDocRefB = userCollectionRef.doc(uidB);
+      const userSnapshotA = await userDocRefA.get();
+      const userSnapshotB = await userDocRefB.get();
+      const userConnectionsA: string[] | undefined =
+      userSnapshotA.get("connections");
+      const userConnectionsB: string[] | undefined =
+      userSnapshotB.get("connections");
 
       try {
-        if (connectionsA && connectionsA.length) {
-          const connections = connectionsA.filter((id) => id !== uidB);
+        if (userConnectionsA && userConnectionsA.length) {
+          const connections = userConnectionsA.filter((id) => id !== uidB);
 
-          logger.debug(`Update user "${snapshotA.id}" with ${connections}`);
-          await docRefA.update({connections});
+          logger.debug(`Update user "${userSnapshotA.id}" with ${connections}`);
+          await userDocRefA.update({connections});
         }
 
-        if (connectionsB && connectionsB.length) {
-          const connections = connectionsB.filter((id) => id !== uidA);
+        if (userConnectionsB && userConnectionsB.length) {
+          const connections = userConnectionsB.filter((id) => id !== uidA);
 
-          logger.debug(`Update user "${snapshotB.id}" with ${connections}`);
-          await docRefB.update(
-            {connections}
-          );
+          logger.debug(`Update user "${userSnapshotB.id}" with ${connections}`);
+          await userDocRefB.update({connections});
         }
 
-        // TODO: Add new connection
+        // Add new connection for both users
+        await addNewConnectionsFunc(userSnapshotA.id);
+        await addNewConnectionsFunc(userSnapshotB.id);
       } catch (error) {
         logger.error(error);
       }

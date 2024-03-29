@@ -2,6 +2,7 @@
 import {getFirestore} from "firebase-admin/firestore";
 import {logger} from "firebase-functions/v2";
 import {onRequest} from "firebase-functions/v2/https";
+import {rfdErrorCodes} from "../error/error-codes";
 
 const QUESTIONS = [
   "Do you think you've changed over the last two years?",
@@ -172,7 +173,12 @@ const addQod = onRequest(
     if (!connectionId) {
       message = `Query param "connectionId" is (${typeof connectionId})`;
       logger.debug(message);
-      res.status(400).json({error: {code: 400, message}});
+      res.status(400).json({
+        error: {
+          code: rfdErrorCodes[rfdErrorCodes.ERR_INVALID_ARGUMENT],
+          message,
+        },
+      });
       return;
     }
 
