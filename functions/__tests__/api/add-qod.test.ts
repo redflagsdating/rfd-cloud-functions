@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {test} from "@jest/globals";
 import {getFirestore} from "firebase-admin/firestore";
 import firebaseFunctionsTest from "firebase-functions-test";
