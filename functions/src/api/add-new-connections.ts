@@ -180,17 +180,16 @@ async function addNewConnectionsFunc(uid: string) {
  */
 const addNewConnections = onCall(
   async (request) => {
-    const uid = request.auth?.uid;
-
-    if (!uid) {
-      const message = "request.auth.uid is undefined";
+    // Checking that the user is authenticated.
+    if (!request.auth || !request.auth.uid) {
+      const message = "The function must be called while authenticated.";
 
       logger.debug(message);
-      throw new HttpsError("unauthenticated", message, {status: 401});
+      throw new HttpsError( "unauthenticated", message, {status: 401});
     }
 
     try {
-      return await addNewConnectionsFunc(uid);
+      return await addNewConnectionsFunc(request.auth.uid);
     } catch (error) {
       logger.error(error);
 

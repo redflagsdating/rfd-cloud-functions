@@ -169,15 +169,15 @@ const addQod = onCall<{connectionId?: string}>(
   // https://google.github.io/styleguide/jsoncstyleguide.xml#JSON_Structure_&_Reserved_Property_Names
     let message;
 
-    const uid = request.auth?.uid;
-    const connectionId = request.data.connectionId;
-
-    if (!uid) {
-      message = "request.auth.uid is undefined";
+    // Checking that the user is authenticated.
+    if (!request.auth || !request.auth?.uid) {
+      message = "The function must be called while authenticated.";
 
       logger.debug(message);
       throw new HttpsError("unauthenticated", message, {status: 401});
     }
+
+    const connectionId = request.data.connectionId;
 
     if (!connectionId) {
       message = `Query param "connectionId" is (${typeof connectionId})`;

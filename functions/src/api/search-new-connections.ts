@@ -86,17 +86,17 @@ const searchNewConnections = onCall<{limits?: number}>(
   async (request) => {
     let message;
 
-    const uid = request.auth?.uid;
-    const limits = request.data.limits ?? maxUserConnections;
-    const userCollectionRef = getFirestore().collection("users");
-
-    if (!uid) {
-      message = "request.auth.uid is undefined";
+    // Checking that the user is authenticated.
+    if (!request.auth || !request.auth?.uid) {
+      message = "The function must be called while authenticated.";
 
       logger.debug(message);
       throw new HttpsError("unauthenticated", message, {status: 401});
     }
 
+    const uid = request.auth.uid;
+    const limits = request.data.limits ?? maxUserConnections;
+    const userCollectionRef = getFirestore().collection("users");
     const userModel = (await userCollectionRef.doc(uid as string).get()).data();
 
     if (!userModel || !userModel.uid) {
