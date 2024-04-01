@@ -2,7 +2,7 @@ import {test} from "@jest/globals";
 import {getFirestore} from "firebase-admin/firestore";
 import firebaseFunctionsTest from "firebase-functions-test";
 // Ensure to import cloud functions from top level for admin.initializeApp()
-import {updateUserOnDisconnected} from "../src/index";
+import {updateUsersOnDisconnected} from "../src/index";
 
 const {wrap, cleanup, makeChange, firestore} = firebaseFunctionsTest({
   projectId: "rf-app-dev-7145f",
@@ -10,12 +10,12 @@ const {wrap, cleanup, makeChange, firestore} = firebaseFunctionsTest({
 
 describe("Cloud Function [trigger] > updateUserOnDisconnected", () => {
   const usersRef = getFirestore().collection("users");
-  const wrapped = wrap(updateUserOnDisconnected);
+  const wrapped = wrap(updateUsersOnDisconnected);
   const uids = ["aDhpBkhITxQ7c6PPclUwlGRoHUl2", "sNxS7Q9w5RYLB87bBB6N2NdBGU73"];
 
   beforeEach(async () => {
-    await usersRef.doc(uids[0]).update({connections: [uids[1]]});
-    await usersRef.doc(uids[1]).update({connections: [uids[0]]});
+    await usersRef.doc(uids[0]).update({connections: ["yC8pYI5d8hLp6VmgtqNS"]});
+    await usersRef.doc(uids[1]).update({connections: ["yC8pYI5d8hLp6VmgtqNS"]});
   });
 
   afterEach(async () => {

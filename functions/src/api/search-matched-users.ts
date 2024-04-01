@@ -16,7 +16,7 @@ const searchUsersApi = `${searchHost.value()}${searchUsersApiPath}`;
  * @param {string | number | undefined} limits
  * @return {Promise<Response>}
  */
-async function searchNewConnectionsFunc(
+async function searchMatchedUsersFunc(
   userModel: FirebaseFirestore.DocumentData, limits?: string | number
 ) {
   const connCollectionRef = getFirestore().collection("connection");
@@ -36,6 +36,9 @@ async function searchNewConnectionsFunc(
     searchParams.append("limit_hits", limits.toString());
     searchParams.append("per_page", limits.toString());
   }
+
+  // Filtered onboarded users only
+  searchParams.append("filter_by", "onboarded:true");
 
   // Filter KYC verified users only
   searchParams.append("filter_by", "verified:true");
@@ -79,10 +82,10 @@ async function searchNewConnectionsFunc(
 }
 
 /**
- * searchNewConnections HTTP Callable function.
+ * searchMatchedUsers HTTP Callable function.
  * (Call from Firebase Function client SDK)
  */
-const searchNewConnections = onCall<{limits?: number}>(
+const searchMatchedUsers = onCall<{limits?: number}>(
   async (request) => {
     let message;
 
@@ -106,7 +109,7 @@ const searchNewConnections = onCall<{limits?: number}>(
       throw new HttpsError("not-found", message, {status: 404});
     }
 
-    const response = await searchNewConnectionsFunc(userModel, limits);
+    const response = await searchMatchedUsersFunc(userModel, limits);
     const status = response.status;
     const json = await response.json();
 
@@ -118,6 +121,6 @@ const searchNewConnections = onCall<{limits?: number}>(
   }
 );
 
-export {searchNewConnections, searchNewConnectionsFunc};
+export {searchMatchedUsers, searchMatchedUsersFunc};
 
 

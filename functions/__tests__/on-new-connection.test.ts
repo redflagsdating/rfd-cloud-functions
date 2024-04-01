@@ -4,17 +4,19 @@ import {logger} from "firebase-functions/v2";
 import * as addQodApi from "../src/api/add-qod";
 
 // Ensure to import cloud functions from top level for admin.initializeApp()
-import {addQodOnNewConnection} from "../src/index";
+import {onNewConnection} from "../src/index";
 
-const {wrap, firestore} = firebaseFunctionsTest();
+const {wrap, firestore} = firebaseFunctionsTest({
+  projectId: "rf-app-dev-7145f",
+}, "../rf-app-dev-7145f-serviceKeys.json");
 
 describe("Cloud Function [trigger] > addQodOnNewConnection", () => {
   const mockError = jest.spyOn(logger, "error");
-  const wrapped = wrap(addQodOnNewConnection);
+  const wrapped = wrap(onNewConnection);
   const snapshot = firestore.makeDocumentSnapshot(
     {
       status: "connected",
-      uids: ["123", "456"],
+      uids: ["aDhpBkhITxQ7c6PPclUwlGRoHUl2", "sNxS7Q9w5RYLB87bBB6N2NdBGU73"],
     },
     "connection/yC8pYI5d8hLp6VmgtqNS"
   );

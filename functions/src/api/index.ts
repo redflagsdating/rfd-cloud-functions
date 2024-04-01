@@ -1,4 +1,4 @@
-export {addNewConnections} from "./add-new-connections";
 export {addQod} from "./add-qod";
-export {searchNewConnections} from "./search-new-connections";
+export {addUserNewConnections} from "./add-user-new-connections";
+export {searchMatchedUsers} from "./search-matched-users";
 

@@ -23,6 +23,9 @@ export const initUserConnectionsCount = onDocumentUpdated(
 
     if (after?.connectionsCount == null && isReadyToConnect) {
       logger.debug(
+        `toOnboarded: ${toOnboarded}, toVerified: ${toVerified}`
+      );
+      logger.debug(
         `Initialize user ${event.params.uid} connectionsCount field`
       );
 
