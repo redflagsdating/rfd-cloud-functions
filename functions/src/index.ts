@@ -8,6 +8,7 @@ setGlobalOptions({region: "australia-southeast1"});
 
 export {addQodOnNewConnection} from "./add-qod-on-new-connection";
 export {addNewConnections, addQod, searchNewConnections} from "./api";
+export {initUserConnectionsCount} from "./init-user-connections-count";
 export {updateConnectionOnSchedule} from "./update-connection-on-schedule";
 export {updateUserOnDisconnected} from "./update-user-on-disconnected";
 
