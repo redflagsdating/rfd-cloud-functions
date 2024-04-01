@@ -61,11 +61,52 @@ async function addUserNewConnectionsFunc(uid: string) {
   const connectionDocRefs = await Promise.all<FirebaseFirestore.DocumentReference<FirebaseFirestore.DocumentData>>(
     hits.map(
       async ({document}) => await connCollectionRef.add(
-        {status: "connected", uids: [uid, document.id]}
+        /**
+         * Skip update "status" before updating user's "connections" field
+         * to prevent triggering onNewConnection() to work around race condition
+         */
+        {uids: [uid, document.id]}
       )
     )
   );
+  const connectionDocIds = connectionDocRefs.map((ref) => ref.id);
 
+  // Update user's "connections" fields in the documents
+  try {
+    const userConnections = connectionDocIds.concat(
+      userModel.connections || []
+    );
+
+    await userDocRef.update(
+      {
+        connections: userConnections,
+        connectionsCount: userConnections.length,
+      }
+    );
+  } catch (error) {
+    logger.debug(`Roll back created connection documents ${connectionDocIds}`);
+
+    // Roll back created connection documents
+    await Promise.all(connectionDocRefs.map(async (ref) => await ref.delete()));
+
+    logger.error(error);
+
+    throw new HttpsError(
+      "internal",
+      (error as Error)?.message ||
+        "Failed to update user's \"connections\" field in the document",
+      {status: 500}
+    );
+  }
+
+  /**
+   * Update all connection documents status to connected to trigger
+   * onNewConnection() so the matched users' documents will be updated its
+   * "connections" fields
+   */
+  await Promise.all(connectionDocRefs.map(
+    async (ref) => await ref.update({status: "connected"})
+  ));
 
   return connectionDocRefs.map((ref) => ref.id);
 }
