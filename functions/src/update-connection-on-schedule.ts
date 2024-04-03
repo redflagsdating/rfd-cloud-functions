@@ -21,7 +21,7 @@ export const updateConnectionOnSchedule = onSchedule(
       .where("_syncedAt", "<=", new Date(dayAgo));
     const snapshots = await connections.get();
 
-    logger.debug(`Schedule check${snapshots.size} connections`);
+    logger.debug(`Schedule check ${snapshots.size} connections`);
 
     snapshots.forEach(async (result) => {
       const lastQodDocSnapshot = (await result.ref.collection("qod")
