@@ -50,10 +50,11 @@ async function addUserNewConnectionsFunc(uid: string) {
   const hits: TypesenseHits = json.hits || [];
 
   if (!hits.length) {
-    message = `No hits (${hits}) for searching new connections (uid=${uid})`;
+    logger.debug(
+      `No hits (${hits}) for searching new connections (uid=${uid})`
+    );
 
-    logger.debug(message);
-    throw new HttpsError("not-found", message, {status: 404});
+    return [];
   }
 
   // Add new documents into Firestore "connection" collection
