@@ -32,42 +32,50 @@ export const updateUsersOnDisconnected = onDocumentUpdated(
       const userConnectionsA: string[] = userSnapshotA.get("connections") || [];
       const userConnectionsB: string[] = userSnapshotB.get("connections") || [];
 
+
       try {
-        if (userConnectionsA && userConnectionsA.length) {
-          const connections = userConnectionsA.filter(
-            (id) => id !== connectionId
-          );
+        if (userSnapshotA.exists) {
+          if (userConnectionsA?.length) {
+            const connections = userConnectionsA.filter(
+              (id) => id !== connectionId
+            );
 
-          logger.debug(
-            `Update user "${userSnapshotA.id}" "connections" to ${connections}`
-          );
-          await userDocRefA.update(
-            {
-              connections,
-              connectionsCount: connections.length,
-            }
-          );
+            logger.debug(
+              `Update user "${uidA}" "connections" with ${connections}`
+            );
+
+            await userDocRefA.update(
+              {
+                connections,
+                connectionsCount: connections.length,
+              }
+            );
+          }
+
+          // Add new connection for both users
+          await addUserNewConnectionsFunc(uidA);
         }
 
-        if (userConnectionsB && userConnectionsB.length) {
-          const connections = userConnectionsB.filter(
-            (id) => id !== connectionId
-          );
+        if (userSnapshotB.exists) {
+          if (userConnectionsB?.length) {
+            const connections = userConnectionsB.filter(
+              (id) => id !== connectionId
+            );
 
-          logger.debug(
-            `Update user "${userSnapshotB.id}" "connections" to ${connections}`
-          );
-          await userDocRefB.update(
-            {
-              connections,
-              connectionsCount: connections.length,
-            }
-          );
+            logger.debug(
+              `Update user "${uidB}" "connections" with ${connections}`
+            );
+
+            await userDocRefB.update(
+              {
+                connections,
+                connectionsCount: connections.length,
+              }
+            );
+          }
+
+          await addUserNewConnectionsFunc(uidB);
         }
-
-        // Add new connection for both users
-        await addUserNewConnectionsFunc(userSnapshotA.id);
-        await addUserNewConnectionsFunc(userSnapshotB.id);
       } catch (error) {
         logger.error(error);
       }

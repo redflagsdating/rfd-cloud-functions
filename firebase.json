@@ -45,5 +45,8 @@
     "pubsub": {
       "port": 8085
     }
+  },
+  "storage": {
+    "rules": "storage.rules"
   }
 }

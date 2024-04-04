@@ -4,7 +4,12 @@ import {onDocumentWritten} from "firebase-functions/v2/firestore";
 import {addQodFunc} from "./api/add-qod";
 
 /**
- *
+ * Add QoD into the connection document and update users' document "connections"
+ * field when a new connection is created.
+ * Instead of loosely using onDocumentCreated(), using onDocumentWritten() to
+ * catch all document changing events (create/update/delete) then identify
+ * status transition "any" -> "connected", this provides more strict definition
+ * of new connection also work along with login in addUserNewConnectionsFunc()
  */
 export const onNewConnection = onDocumentWritten(
   "connection/{connectionId}",
@@ -15,11 +20,11 @@ export const onNewConnection = onDocumentWritten(
     const isCreated = prevConnectionData?.status !== "connected" &&
     connectionData?.status === "connected";
 
-    if (!connectionId || !connectionData) {
-      logger.error(
-        `Missing connectionId: ${connectionId} or data: ${connectionData}`
-      );
-    }
+    logger.debug(
+      `connectionId: ${connectionId},
+       before: ${prevConnectionData?.status},
+       after: ${connectionData?.status}`
+    );
 
     if (isCreated) {
       logger.debug(`connection "${connectionId}" is created`);
