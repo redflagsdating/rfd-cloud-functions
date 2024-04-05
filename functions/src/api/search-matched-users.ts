@@ -29,7 +29,7 @@ async function searchMatchedUsersFunc(
     .flat().filter((id) => !!id && id !== userModel.uid);
 
   const searchParams = new URLSearchParams("q=*");
-  const {genderFor = [], latlng} = userModel;
+  const {gender, genderFor = [], latlng} = userModel;
 
   // Search hits limit
   if (limits) {
@@ -47,6 +47,7 @@ async function searchMatchedUsersFunc(
   searchParams.append("filter_by", `connectionsCount:<${maxUserConnections}`);
 
   // Filter matched genders only
+  searchParams.append("filter_by", `genderFor:=[${gender}]`);
   if (genderFor.length) {
     searchParams.append("filter_by", `gender:=[${genderFor}]`);
   }
