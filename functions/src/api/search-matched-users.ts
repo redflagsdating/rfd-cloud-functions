@@ -62,7 +62,7 @@ async function searchMatchedUsersFunc(
 
   // Filter out already connected/disconnected users and self
   if (uids.length) {
-    searchParams.append("filter_by", `id:!=[${uids.concat(userModel.id)}]`);
+    searchParams.append("filter_by", `id:!=[${uids.concat(userModel.uid)}]`);
   }
 
   // TODO: Semantic search redFlags, greenFlags and realTalk
