@@ -21,7 +21,7 @@ export const updateUsersOnDisconnected = onDocumentUpdated(
 
     if (toDisconnected && uidA && uidB) {
       logger.debug(
-        `Connection status has changed ${before?.status} -> ${after?.status}`
+        `"${connectionId}" has changed ${before?.status} -> ${after?.status}`
       );
       logger.debug(`Connection between "${uidA}" and "${uidB}"`);
 
@@ -52,10 +52,13 @@ export const updateUsersOnDisconnected = onDocumentUpdated(
             );
           }
 
-          // Add new connection for both users
           await addUserNewConnectionsFunc(uidA);
         }
+      } catch (error) {
+        logger.error(error);
+      }
 
+      try {
         if (userSnapshotB.exists) {
           if (userConnectionsB?.length) {
             const connections = userConnectionsB.filter(
