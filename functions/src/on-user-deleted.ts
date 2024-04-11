@@ -3,6 +3,7 @@ import {getStorage} from "firebase-admin/storage";
 import {logger} from "firebase-functions/v2";
 import {onDocumentDeleted} from "firebase-functions/v2/firestore";
 import {backfill} from "./utils/typesense";
+import {removeUserConnection} from "./utils/user";
 
 /**
  * Tear down dependency when user document is delete such as deleting images in
@@ -38,10 +39,24 @@ export const onUserDeleted = onDocumentDeleted(
 
       connections.forEach(async (connectionId) => {
         try {
-          await connCollectionRef.doc(connectionId)
-            .update({status: "disconnected"});
+          const docRef = connCollectionRef.doc(connectionId);
+          const snapshot = await docRef.get();
+
+          await docRef.update({status: "disconnected"});
+
+          if (snapshot.exists) {
+            const uids: string[] = snapshot.data()?.uids || [];
+            const connectedUid = uids.find((id) => id !== uid);
+
+            if (connectedUid) {
+              logger.debug(
+                `Remove connection ${connectionId} from user ${connectedUid}`
+              );
+
+              await removeUserConnection(connectedUid, connectionId);
+            }
+          }
         } catch (error) {
-          logger.error(`Update connection ${connectionId} status failed.`);
           logger.error(error);
         }
       });

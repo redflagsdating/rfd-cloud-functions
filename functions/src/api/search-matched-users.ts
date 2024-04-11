@@ -37,6 +37,9 @@ async function searchMatchedUsersFunc(
     searchParams.append("per_page", limits.toString());
   }
 
+  // Filter out self
+  searchParams.append("filter_by", `id:!=${userModel.uid}`);
+
   // Filtered onboarded users only
   searchParams.append("filter_by", "onboarded:true");
 
@@ -63,7 +66,7 @@ async function searchMatchedUsersFunc(
 
   // Filter out already connected/disconnected users and self
   if (uids.length) {
-    searchParams.append("filter_by", `id:!=[${uids.concat(userModel.uid)}]`);
+    searchParams.append("filter_by", `id:!=[${uids}]`);
   }
 
   // TODO: Semantic search redFlags, greenFlags and realTalk

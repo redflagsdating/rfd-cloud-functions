@@ -2,6 +2,7 @@ import {getFirestore} from "firebase-admin/firestore";
 import {logger} from "firebase-functions/v2";
 import {onSchedule} from "firebase-functions/v2/scheduler";
 import {addQodFunc} from "./api/add-qod";
+import {removeUserConnection} from "./utils/user";
 
 /**
  * Schedule check on "connection" collection to break connection or add new
@@ -27,6 +28,7 @@ export const updateConnectionOnSchedule = onSchedule(
       const lastQodDocSnapshot = (await result.ref.collection("qod")
         .orderBy("createdAt", "desc")
         .limit(1).get()).docs[0];
+
       logger.debug(
         `Connection "${result.id}" last QoD "${lastQodDocSnapshot.id}"`
       );
@@ -34,16 +36,36 @@ export const updateConnectionOnSchedule = onSchedule(
       const lastQodAnswerCount = (await lastQodDocSnapshot.ref
         .collection("qodAnswer")
         .count().get()).data().count;
+
       logger.debug(
-        `Last QoD "${lastQodDocSnapshot.id}" has ${lastQodAnswerCount} answers`
+        `Last QoD "${lastQodDocSnapshot.id}" has ${lastQodAnswerCount}
+           answers`
       );
 
       if (lastQodAnswerCount == 2) {
         // Add new QoD when both have answered the question
-        await addQodFunc(result.id);
+        try {
+          await addQodFunc(result.id);
+        } catch (error) {
+          logger.error(error);
+        }
       } else {
-        await result.ref.update({"status": "disconnected"});
-        logger.debug(`Disconnected connection "${result.id}"`);
+        try {
+          const [uidA, uidB]: string[] = result.data()?.uids || [];
+
+          await result.ref.update({"status": "disconnected"});
+          logger.debug(`Disconnected connection "${result.id}"`);
+
+          if (uidA) {
+            await removeUserConnection(uidA, result.id);
+          }
+
+          if (uidB) {
+            await removeUserConnection(uidB, result.id);
+          }
+        } catch (error) {
+          logger.error(error);
+        }
       }
     });
   }
