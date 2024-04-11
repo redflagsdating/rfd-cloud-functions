@@ -41,7 +41,7 @@ export const updateUsersOnDisconnected = onDocumentUpdated(
             );
 
             logger.debug(
-              `Update user "${uidA}" "connections" with ${connections}`
+              `Update user A "${uidA}" "connections" with ${connections}`
             );
 
             await userDocRefA.update(
@@ -66,7 +66,7 @@ export const updateUsersOnDisconnected = onDocumentUpdated(
             );
 
             logger.debug(
-              `Update user "${uidB}" "connections" with ${connections}`
+              `Update user B "${uidB}" "connections" with ${connections}`
             );
 
             await userDocRefB.update(

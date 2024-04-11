@@ -2,6 +2,7 @@ import {getFirestore} from "firebase-admin/firestore";
 import {getStorage} from "firebase-admin/storage";
 import {logger} from "firebase-functions/v2";
 import {onDocumentDeleted} from "firebase-functions/v2/firestore";
+import {backfill} from "./utils/typesense";
 
 /**
  * Tear down dependency when user document is delete such as deleting images in
@@ -12,6 +13,9 @@ export const onUserDeleted = onDocumentDeleted(
   async (event) => {
     const uid = event.params.uid;
     const userModel = event.data?.data();
+
+    // Typesense backfill to remove user from indexed data
+    await backfill();
 
     try {
       logger.debug("Delete user's storage images");
