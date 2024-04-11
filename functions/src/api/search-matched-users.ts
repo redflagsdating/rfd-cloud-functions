@@ -52,11 +52,12 @@ async function searchMatchedUsersFunc(
     searchParams.append("filter_by", `gender:=[${genderFor}]`);
   }
 
-  // Filter distance within 50 km radius and sort in distance (closest) order
+  // Filter distance within radius and sort in distance (closest) order
   if (latlng?.length === 2) {
     const latlngStr = latlng.join(", ");
 
-    searchParams.append("filter_by", `latlng:(${latlngStr},50 km)`);
+    // TODO: Temporarily set it to 1000km to start with in order to have matches
+    searchParams.append("filter_by", `latlng:(${latlngStr},1000 km)`);
     searchParams.append("sort_by", `latlng(${latlngStr}):asc`);
   }
 
