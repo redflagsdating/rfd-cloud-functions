@@ -59,9 +59,10 @@ async function searchMatchedUsersFunc(
   if (latlng?.length === 2) {
     const latlngStr = latlng.join(", ");
 
-    // TODO: Temporarily set it to 1000km to start with in order to have matches
-    searchParams.append("filter_by", `latlng:(${latlngStr},1000 km)`);
-    searchParams.append("sort_by", `latlng(${latlngStr}):asc`);
+    // TODO: Temporarily disabled for MVP, we will need to enabled later
+    logger.debug(`Temporarily disabled radius search for latlng ${latlngStr}`);
+    // searchParams.append("filter_by", `latlng:(${latlngStr},50 km)`);
+    // searchParams.append("sort_by", `latlng(${latlngStr}):asc`);
   }
 
   // Filter out already connected/disconnected users and self
