@@ -12,7 +12,7 @@ import {removeUserConnection} from "./utils/user";
  * add schedule function if that is the only way to do it.
  */
 export const updateConnectionOnSchedule = onSchedule(
-  "every 5 minutes",
+  "every 10 minutes",
   async () => {
     const dayAgo = Date.now() - (24 * 60 * 60 * 10e2);
     const collectionRef = getFirestore().collection("connection");
