@@ -4,6 +4,35 @@ import {onDocumentWritten} from "firebase-functions/v2/firestore";
 import {addQodFunc} from "./api/add-qod";
 
 /**
+ * Internal function to update user's connections field in document
+ * @param {string} uid
+ * @param {string} connectionId
+ */
+async function updateUserConnections(uid: string, connectionId: string) {
+  const docRef = getFirestore().collection("users").doc(uid);
+
+  try {
+    await getFirestore().runTransaction(async (transaction) => {
+      const snapshot = await transaction.get(docRef);
+      const userConnections: string[] = snapshot.get("connections") || [];
+
+      if (!userConnections?.includes(connectionId)) {
+        const connections = userConnections.concat([connectionId]);
+        transaction.update(
+          docRef,
+          {
+            connections,
+            connectionsCount: connections.length,
+          }
+        );
+      }
+    });
+  } catch (error) {
+    logger.error(error);
+  }
+}
+
+/**
  * Add QoD into the connection document and update users' document "connections"
  * field when a new connection is created.
  * Instead of loosely using onDocumentCreated(), using onDocumentWritten() to
@@ -39,41 +68,8 @@ export const onNewConnection = onDocumentWritten(
       // Update "connections" field of the users' documents accordingly
       const [uidA, uidB] = connectionData.uids as Array<string | undefined>;
 
-      if (!!uidA && !!uidB) {
-        const userCollectionRef = getFirestore().collection("users");
-        const userDocRefA = userCollectionRef.doc(uidA);
-        const userDocRefB = userCollectionRef.doc(uidB);
-        const userSnapshotA = await userDocRefA.get();
-        const userSnapshotB = await userDocRefB.get();
-        const userConnectionsA: string[] =
-          userSnapshotA.get("connections") || [];
-        const userConnectionsB: string[] =
-          userSnapshotB.get("connections") || [];
-
-        try {
-          if (!userConnectionsA?.includes(connectionId)) {
-            const connections = userConnectionsA.concat([connectionId]);
-            await userDocRefA.update(
-              {
-                connections,
-                connectionsCount: connections.length,
-              }
-            );
-          }
-
-          if (!userConnectionsB?.includes(connectionId)) {
-            const connections = userConnectionsB.concat([connectionId]);
-            await userDocRefB.update(
-              {
-                connections,
-                connectionsCount: connections.length,
-              }
-            );
-          }
-        } catch (error) {
-          logger.error(error);
-        }
-      }
+      !!uidA && await updateUserConnections(uidA, connectionId);
+      !!uidB && await updateUserConnections(uidB, connectionId);
     }
   }
 );

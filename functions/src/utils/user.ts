@@ -10,30 +10,35 @@ import {logger} from "firebase-functions/v2";
  *
  */
 async function removeUserConnection(uid: string, connectionId: string) {
+  const docRef = getFirestore().collection("users").doc(uid);
+
   logger.debug(`Remove connection (${connectionId}) from user "${uid}" `);
 
-  const collectionRef = getFirestore().collection("users");
-  const docRef = collectionRef.doc(uid);
-  const snapshot = await docRef.get();
+  try {
+    await getFirestore().runTransaction(async (transaction) => {
+      const snapshot = await transaction.get(docRef);
 
-  if (snapshot.exists) {
-    const current: string[] = snapshot.get("connections") || [];
-    const connections = current.filter((id) => id !== connectionId);
+      if (snapshot.exists) {
+        const current: string[] = snapshot.get("connections") || [];
+        const connections = current.filter((id) => id !== connectionId);
 
-    logger.debug(`Update user "${uid}" "connections" with "${connections}"`);
+        logger.debug(
+          `Update user "${uid}" "connections" with "${connections}"`
+        );
 
-    try {
-      await docRef.update(
-        {
-          connections,
-          connectionsCount: connections.length,
-        }
-      );
-    } catch (error) {
-      logger.error(error);
-    }
-  } else {
-    logger.debug(`User ${uid} has empty snapshot`);
+        transaction.update(
+          docRef,
+          {
+            connections,
+            connectionsCount: connections.length,
+          }
+        );
+      } else {
+        logger.debug(`User ${uid} has empty snapshot`);
+      }
+    });
+  } catch (error) {
+    logger.error(error);
   }
 }
 

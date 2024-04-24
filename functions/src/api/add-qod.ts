@@ -129,27 +129,34 @@ function _getQod(excludedQod?: Array<string>): string {
  */
 async function addQodFunc(connectionId: string): Promise<FirebaseFirestore.DocumentData | undefined> {
   const current = new Date();
-  const connectionDocRef = getFirestore().collection("connection").doc(connectionId);
-  const connectionData = (await connectionDocRef.get()).data();
   const payload = {createdAt: current, question: ""};
-  const excludedQod: Array<string> = connectionData?.["_excludedQod"] ? connectionData["_excludedQod"] : [];
-
-  payload.question = _getQod(excludedQod);
-
-  // Add new question to excluded list
-  excludedQod.push(payload.question);
-
-  logger.debug(`Get a new QoD for connection "${connectionId}"`);
 
   try {
-    // Update fields "_syncedAt" and "_excludedQod" of connection doc
-    await connectionDocRef.update({
-      _syncedAt: current,
-      _excludedQod: excludedQod,
-    });
-    await connectionDocRef.collection("qod").add(payload);
+    await getFirestore().runTransaction(async (transaction) => {
+      const docRef = getFirestore().collection("connection").doc(connectionId);
+      const connectionData = (await transaction.get(docRef)).data();
+      const excludedQod: Array<string> = connectionData?.["_excludedQod"] ? connectionData["_excludedQod"] : [];
 
-    logger.debug(`New QoD has been added to connection "${connectionId}"`);
+      payload.question = _getQod(excludedQod);
+
+      // Add new question to excluded list
+      excludedQod.push(payload.question);
+
+      logger.debug(`Get a new QoD for connection "${connectionId}"`);
+
+      // Update fields "_syncedAt" and "_excludedQod" of connection doc
+      transaction.update(
+        docRef,
+        {
+          _syncedAt: current,
+          _excludedQod: excludedQod,
+        }
+      );
+
+      await docRef.collection("qod").add(payload);
+
+      logger.debug(`New QoD has been added to connection "${connectionId}"`);
+    });
 
     return payload;
   } catch (error) {
