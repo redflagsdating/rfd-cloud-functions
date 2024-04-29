@@ -113,7 +113,7 @@ const QUESTIONS = [
  * @param {Array<string>} excludedQod
  * @return {string}
  */
-function _getQod(excludedQod?: Array<string>): string {
+function _getQod(excludedQod?: Array<string>): string | undefined {
   const questions = QUESTIONS.filter((value) => {
     return !(excludedQod ?? []).includes(value);
   });
@@ -136,8 +136,13 @@ async function addQodFunc(connectionId: string): Promise<FirebaseFirestore.Docum
       const docRef = getFirestore().collection("connection").doc(connectionId);
       const connectionData = (await transaction.get(docRef)).data();
       const excludedQod: Array<string> = connectionData?.["_excludedQod"] ? connectionData["_excludedQod"] : [];
+      const newQod = _getQod(excludedQod);
 
-      payload.question = _getQod(excludedQod);
+      if (!newQod) {
+        throw Error(`No more QoD for the connection (${connectionId})`);
+      }
+
+      payload.question = newQod;
 
       // Add new question to excluded list
       excludedQod.push(payload.question);

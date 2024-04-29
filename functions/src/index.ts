@@ -7,9 +7,9 @@ admin.initializeApp();
 setGlobalOptions({region: "australia-southeast1"});
 
 export {addQod, addUserNewConnections, searchMatchedUsers} from "./api";
-export {initUserConnectionsCount} from "./init-user-connections-count";
 export {onNewConnection} from "./on-new-connection";
-export {onNewUserOnboarded} from "./on-new-user-onboarded";
+export {onNewMessage} from "./on-new-message";
 export {onUserDeleted} from "./on-user-deleted";
+export {onUserUpdated} from "./on-user-updated";
 export {updateConnectionOnSchedule} from "./update-connection-on-schedule";
 
