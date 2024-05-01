@@ -49,13 +49,11 @@ export const onNewConnection = onDocumentWritten(
     const isCreated = prevConnectionData?.status !== "connected" &&
     connectionData?.status === "connected";
 
-    logger.debug(
-      `connectionId: ${connectionId},
-       before: ${prevConnectionData?.status},
-       after: ${connectionData?.status}`
-    );
-
     if (isCreated) {
+      logger.debug(
+        `before: ${prevConnectionData?.status},
+         after: ${connectionData?.status}`
+      );
       logger.debug(`connection "${connectionId}" is created`);
 
       // Add a QoD into the new connection

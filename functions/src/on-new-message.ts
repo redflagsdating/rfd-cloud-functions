@@ -59,7 +59,7 @@ export const onNewMessage = onDocumentWritten(
 
       // Skip push notification when fcmToken is null
       if (fcmToken == null) {
-        logger.error(`Unable to retrieve fcmToken from user (${receiver})`);
+        logger.debug(`Unable to retrieve fcmToken from user (${receiver})`);
         return;
       }
 

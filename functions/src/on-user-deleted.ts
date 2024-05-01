@@ -19,8 +19,8 @@ export const onUserDeleted = onDocumentDeleted(
     await backfill();
 
     try {
-      logger.debug("Delete user's storage images");
       await getStorage().bucket().deleteFiles({prefix: `images/${uid}`});
+      logger.debug("Deleted user's images storage");
     } catch (error) {
       logger.error(error);
     }
@@ -31,35 +31,40 @@ export const onUserDeleted = onDocumentDeleted(
       return;
     }
 
-    const connCollectionRef = getFirestore().collection("connection");
     const connections = userModel.connections as string[] | null | undefined;
 
     if (connections?.length) {
-      logger.debug(`Disconnect user's ${connections.length} connections`);
+      await getFirestore().runTransaction(
+        async (transaction) => {
+          connections.forEach(
+            async (cid) => {
+              try {
+                const docRef = getFirestore().collection("connection").doc(cid);
 
-      connections.forEach(async (connectionId) => {
-        try {
-          const docRef = connCollectionRef.doc(connectionId);
-          const snapshot = await docRef.get();
+                transaction.update(docRef, {status: "disconnected"});
 
-          await docRef.update({status: "disconnected"});
+                const snapshot = await transaction.get(docRef);
+                const status = snapshot.data()?.status;
+                const uids: string[] = snapshot.data()?.uids || [];
+                const connectedUid = uids.find((id) => id !== uid);
 
-          if (snapshot.exists) {
-            const uids: string[] = snapshot.data()?.uids || [];
-            const connectedUid = uids.find((id) => id !== uid);
+                logger.debug(
+                  `Updated user's connection (${cid}) status: ${status}`
+                );
 
-            if (connectedUid) {
-              logger.debug(
-                `Remove connection ${connectionId} from user ${connectedUid}`
-              );
-
-              await removeUserConnection(connectedUid, connectionId);
+                if (connectedUid) {
+                  await removeUserConnection(connectedUid, cid);
+                  logger.debug(
+                    `Removed connection (${cid}) from user (${connectedUid})`
+                  );
+                }
+              } catch (error) {
+                logger.error(error);
+              }
             }
-          }
-        } catch (error) {
-          logger.error(error);
+          );
         }
-      });
+      );
     }
   }
 );

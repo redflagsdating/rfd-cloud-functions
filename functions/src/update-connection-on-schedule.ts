@@ -24,8 +24,6 @@ export const updateConnectionOnSchedule = onSchedule(
       .where("_syncedAt", "<=", new Date(dayAgo));
     const snapshots = await connections.get();
 
-    logger.debug(`Schedule check ${snapshots.size} connections`);
-
     snapshots.forEach(async (result) => {
       const lastQodDocSnapshot = (await result.ref.collection("qod")
         .orderBy("createdAt", "desc")
@@ -84,6 +82,9 @@ export const updateConnectionOnSchedule = onSchedule(
                   },
                 }
               );
+              logger.debug(
+                `[Push Notification] New QoD for connection (${result.id})`
+              );
             }
           }
         } catch (error) {
@@ -93,7 +94,7 @@ export const updateConnectionOnSchedule = onSchedule(
         try {
           await result.ref.update({"status": "disconnected"});
 
-          logger.debug(`Disconnected connection "${result.id}"`);
+          logger.debug(`Disconnected connection ("${result.id}")`);
 
           await removeUserConnection(uidA, result.id);
           await removeUserConnection(uidB, result.id);

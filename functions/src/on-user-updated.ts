@@ -22,10 +22,9 @@ export const onUserUpdated = onDocumentUpdated(
      (isTransToVerified && isNowOnboarded);
 
     if (isReady && userModel?.connectionsCount == null) {
-      logger.debug(`Initialize user ${uid} connectionsCount field`);
-
       try {
         await userDocRef?.update({connectionsCount: 0});
+        logger.debug(`Initialized user (${uid}) connectionsCount: 0`);
       } catch (error) {
         logger.error(error);
       }
@@ -33,18 +32,18 @@ export const onUserUpdated = onDocumentUpdated(
 
     // ** Backfill Typesense search when new user onboarded */
     if (isTransToOnboarded) {
-      logger.debug(`Backfill Typesense new onboarded user (${uid})!`);
       await backfill();
+      logger.debug(`Done backfill Typesense new onboarded user (${uid})!`);
     }
 
     // ** Send push notifications for connection changes */
     const fcmToken = userModel?.fcmToken;
-    const connectionsDiff = (userModel?.connectionsCount ?? 0) -
+    const diff = (userModel?.connectionsCount ?? 0) -
     (before?.connectionsCount ?? 0);
 
     if (fcmToken != null) {
       try {
-        if (connectionsDiff > 0) {
+        if (diff > 0) {
           await getMessaging().send(
             {
               token: fcmToken,
@@ -67,7 +66,10 @@ export const onUserUpdated = onDocumentUpdated(
               },
             }
           );
-        } else if (connectionsDiff < 0) {
+          logger.debug(
+            `[Push Notification] ${diff} new connections`
+          );
+        } else if (diff < 0) {
           await getMessaging().send(
             {
               token: fcmToken,
@@ -89,6 +91,9 @@ export const onUserUpdated = onDocumentUpdated(
                 },
               },
             }
+          );
+          logger.debug(
+            `[Push Notification] Removed ${Math.abs(diff)} connections`
           );
         }
       } catch (e) {
