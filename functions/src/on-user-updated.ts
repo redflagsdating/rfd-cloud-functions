@@ -1,3 +1,4 @@
+import {getFirestore} from "firebase-admin/firestore";
 import {getMessaging} from "firebase-admin/messaging";
 import {logger} from "firebase-functions/v2";
 import {onDocumentUpdated} from "firebase-functions/v2/firestore";
@@ -70,31 +71,56 @@ export const onUserUpdated = onDocumentUpdated(
             `[Push Notification] ${diff} new connections`
           );
         } else if (diff < 0) {
-          await getMessaging().send(
-            {
-              token: fcmToken,
-              apns: {
-                payload: {
-                  aps: {
-                    alert: {
-                      titleLocKey: "NOTIFICATION_REMOVE_CONNECTIONS_TITLE",
-                      locKey: "NOTIFICATION_REMOVE_CONNECTIONS_BODY",
+          const connections = (userModel?.connections ?? []) as string[];
+          const prevConnections = (before?.connections ?? []) as string[];
+          const removedConnectionIds = prevConnections.filter((cid) => {
+            return !connections.includes(cid);
+          });
+
+          if (removedConnectionIds.length) {
+            removedConnectionIds.forEach(async (cid) => {
+              const uids = ((await getFirestore().collection("connection")
+                .doc(cid).get()).get("uids") ?? []) as string[];
+              const connectedUserId = uids.find((id) => id !== uid);
+
+              if (connectedUserId) {
+                const displayName = (await getFirestore().collection("users")
+                  .doc(connectedUserId).get()).get("displayName");
+
+                await getMessaging().send(
+                  {
+                    token: fcmToken,
+                    apns: {
+                      payload: {
+                        aps: {
+                          alert: {
+                            // eslint-disable-next-line max-len
+                            titleLocKey: "NOTIFICATION_REMOVE_CONNECTIONS_TITLE",
+                            titleLocArgs: [displayName],
+                            locKey: "NOTIFICATION_REMOVE_CONNECTIONS_BODY",
+                            locArgs: [displayName],
+                          },
+                        },
+                      },
                     },
-                  },
-                },
-              },
-              android: {
-                priority: "high",
-                notification: {
-                  titleLocKey: "notification_remove_connections_title",
-                  bodyLocKey: "notification_remove_connections_body",
-                },
-              },
-            }
-          );
-          logger.debug(
-            `[Push Notification] Removed ${Math.abs(diff)} connections`
-          );
+                    android: {
+                      priority: "high",
+                      notification: {
+                        titleLocKey: "notification_remove_connections_title",
+                        titleLocArgs: [displayName],
+                        bodyLocKey: "notification_remove_connections_body",
+                        bodyLocArgs: [displayName],
+                      },
+                    },
+                  }
+                );
+
+                logger.debug(
+                  `[Push Notification] You lost connection with ${displayName}`
+                );
+              }
+            });
+          }
         }
       } catch (e) {
         logger.error(e);
