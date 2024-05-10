@@ -40,6 +40,9 @@ async function searchMatchedUsersFunc(
   // Filter out self
   searchParams.append("filter_by", `id:!=${userModel.uid}`);
 
+  // Filter out @redflagsdating.com internal testing users
+  searchParams.append("filter_by", "email:!redflagsdating.com");
+
   // Filtered onboarded users only
   searchParams.append("filter_by", "onboarded:true");
 
