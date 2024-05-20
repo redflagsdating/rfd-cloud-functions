@@ -20,7 +20,7 @@ export const onUserDeleted = onDocumentDeleted(
 
     try {
       await getStorage().bucket().deleteFiles({prefix: `images/${uid}`});
-      logger.debug("Deleted user's images storage");
+      logger.debug(`Deleted user's (${uid}) images storage`);
     } catch (error) {
       logger.error(error);
     }
@@ -40,16 +40,14 @@ export const onUserDeleted = onDocumentDeleted(
             async (cid) => {
               try {
                 const docRef = getFirestore().collection("connection").doc(cid);
-
-                transaction.update(docRef, {status: "disconnected"});
-
                 const snapshot = await transaction.get(docRef);
-                const status = snapshot.data()?.status;
                 const uids: string[] = snapshot.data()?.uids || [];
                 const connectedUid = uids.find((id) => id !== uid);
 
+                transaction.update(docRef, {status: "disconnected"});
+
                 logger.debug(
-                  `Updated user's connection (${cid}) status: ${status}`
+                  `Updated user's connection (${cid}) status: disconnected`
                 );
 
                 if (connectedUid) {
