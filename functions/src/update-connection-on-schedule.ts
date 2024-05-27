@@ -36,6 +36,7 @@ export const updateConnectionOnSchedule = onSchedule(
         .orderBy("createdAt", "desc")
         .limit(1).get()).docs[0];
       const lastQodCreatedAt = lastQodDocSnapshot.data().createdAt as Timestamp;
+      const lastQodNotified = lastQodDocSnapshot.data()._notified as boolean;
       const lastQodAnswerCount = (await lastQodDocSnapshot.ref
         .collection("qodAnswer")
         .count().get()).data().count;
@@ -49,9 +50,9 @@ export const updateConnectionOnSchedule = onSchedule(
        * Connection still in grace period
        */
       if (lastQodCreatedAt.toMillis() > dayAgo) {
-        logger.debug(`Connection "${result.id}" in grace period`);
+        if (lastQodAnswerCount != 2 && lastQodNotified !== true) {
+          logger.debug(`Connection "${result.id}" in grace period`);
 
-        if (lastQodAnswerCount != 2) {
           // TODO: Revisit later to send notification to unanswered user.
           // Currently, send to both mainly to avoid too many database R/W
           [fcmTokenA, fcmTokenB].forEach(async (token, index) => {
@@ -89,6 +90,9 @@ export const updateConnectionOnSchedule = onSchedule(
                     },
                   }
                 );
+
+                // Set internal flag to ensure notify once only
+                await lastQodDocSnapshot.ref.update({"_notified": true});
 
                 logger.debug("[Push Notification] Remind QoD is counting down");
               } catch (error) {
