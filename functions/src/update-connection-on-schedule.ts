@@ -46,31 +46,78 @@ export const updateConnectionOnSchedule = onSchedule(
       );
 
       /**
-       * Send push notification to remind users answering QoD 2 before losing
-       * connection.
+       * Connection still in grace period
        */
       if (lastQodCreatedAt.toMillis() > dayAgo) {
         logger.debug(`Connection "${result.id}" in grace period`);
 
-        [fcmTokenA, fcmTokenB].forEach(async (token, index) => {
-          if (token) {
-            const counter = "2h";
-            const displayName = index === 0 ?
-              snapshotUserA?.get("displayName") :
-              snapshotUserB?.get("displayName");
+        if (lastQodAnswerCount != 2) {
+          // TODO: Revisit later to send notification to unanswered user.
+          // Currently, send to both mainly to avoid too many database R/W
+          [fcmTokenA, fcmTokenB].forEach(async (token, index) => {
+            if (token) {
+              const counter = "2h";
+              const displayName = index === 0 ?
+                snapshotUserA?.get("displayName") :
+                snapshotUserB?.get("displayName");
 
-            try {
-              await getMessaging().send(
+              try {
+                await getMessaging().send(
+                  {
+                    token,
+                    apns: {
+                      payload: {
+                        aps: {
+                          alert: {
+                            titleLocKey: "NOTIFICATION_QOD_COUNTDOWN_TITLE",
+                            titleLocArgs: [counter],
+                            locKey: "NOTIFICATION_QOD_COUNTDOWN_BODY",
+                            locArgs: [displayName],
+                          },
+                        },
+                      },
+                    },
+                    android: {
+                      priority: "high",
+                      notification: {
+                        priority: "max",
+                        titleLocKey: "notification_qod_countdown_title",
+                        titleLocArgs: [counter],
+                        bodyLocKey: "notification_qod_countdown_body",
+                        bodyLocArgs: [displayName],
+                      },
+                    },
+                  }
+                );
+
+                logger.debug("[Push Notification] Remind QoD is counting down");
+              } catch (error) {
+                logger.error(error);
+              }
+            }
+          });
+        }
+      } else {
+        if (lastQodAnswerCount == 2) {
+          const tokens = [fcmTokenA, fcmTokenB].filter((t) => !!t);
+
+          // Add new QoD when both have answered the question
+          try {
+            const qod = await addQodFunc(result.id);
+            const question = qod?.question;
+
+            // Push notification for new QoD
+            if (question && tokens.length) {
+              await getMessaging().sendEachForMulticast(
                 {
-                  token,
+                  tokens,
                   apns: {
                     payload: {
                       aps: {
                         alert: {
-                          titleLocKey: "NOTIFICATION_QOD_COUNTDOWN_TITLE",
-                          titleLocArgs: [counter],
-                          locKey: "NOTIFICATION_QOD_COUNTDOWN_BODY",
-                          locArgs: [displayName],
+                          titleLocKey: "NOTIFICATION_NEW_QOD_TITLE",
+                          locKey: "NOTIFICATION_NEW_QOD_BODY",
+                          locArgs: [question],
                         },
                       },
                     },
@@ -79,78 +126,32 @@ export const updateConnectionOnSchedule = onSchedule(
                     priority: "high",
                     notification: {
                       priority: "max",
-                      titleLocKey: "notification_qod_countdown_title",
-                      titleLocArgs: [counter],
-                      bodyLocKey: "notification_qod_countdown_body",
-                      bodyLocArgs: [displayName],
+                      titleLocKey: "notification_new_qod_title",
+                      bodyLocKey: "notification_new_qod_body",
+                      bodyLocArgs: [question],
                     },
                   },
                 }
               );
 
-              logger.debug("[Push Notification] Remind QoD is counting down");
-            } catch (error) {
-              logger.error(error);
+              logger.debug(
+                `[Push Notification] New QoD for connection (${result.id})`
+              );
             }
+          } catch (error) {
+            logger.error(error);
           }
-        });
+        } else {
+          try {
+            await result.ref.update({"status": "disconnected"});
 
-        return;
-      }
+            logger.debug(`Disconnected connection ("${result.id}")`);
 
-      if (lastQodAnswerCount == 2) {
-        const tokens = [fcmTokenA, fcmTokenB].filter((t) => !!t);
-
-        // Add new QoD when both have answered the question
-        try {
-          const qod = await addQodFunc(result.id);
-          const question = qod?.question;
-
-          // Push notification for new QoD
-          if (question && tokens.length) {
-            await getMessaging().sendEachForMulticast(
-              {
-                tokens,
-                apns: {
-                  payload: {
-                    aps: {
-                      alert: {
-                        titleLocKey: "NOTIFICATION_NEW_QOD_TITLE",
-                        locKey: "NOTIFICATION_NEW_QOD_BODY",
-                        locArgs: [question],
-                      },
-                    },
-                  },
-                },
-                android: {
-                  priority: "high",
-                  notification: {
-                    priority: "max",
-                    titleLocKey: "notification_new_qod_title",
-                    bodyLocKey: "notification_new_qod_body",
-                    bodyLocArgs: [question],
-                  },
-                },
-              }
-            );
-
-            logger.debug(
-              `[Push Notification] New QoD for connection (${result.id})`
-            );
+            await removeUserConnection(uidA, result.id);
+            await removeUserConnection(uidB, result.id);
+          } catch (error) {
+            logger.error(error);
           }
-        } catch (error) {
-          logger.error(error);
-        }
-      } else {
-        try {
-          await result.ref.update({"status": "disconnected"});
-
-          logger.debug(`Disconnected connection ("${result.id}")`);
-
-          await removeUserConnection(uidA, result.id);
-          await removeUserConnection(uidB, result.id);
-        } catch (error) {
-          logger.error(error);
         }
       }
     });
