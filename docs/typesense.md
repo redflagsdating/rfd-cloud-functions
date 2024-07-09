@@ -49,7 +49,7 @@ spec:
   capacity:
     storage: 10Gi
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   hostPath:
     path: "/var/lib/data"
 ```
@@ -70,8 +70,10 @@ metadata:
   namespace: rfd-typesense-dev
 spec:
   storageClassName: "gp3"
+  volumeMode: Filesystem
+  volumeName: typesense-data-pv
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
       storage: 10Gi
