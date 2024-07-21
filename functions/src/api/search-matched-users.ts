@@ -58,8 +58,10 @@ async function searchMatchedUsersFunc(
     searchParams.append("filter_by", `gender:=[${genderFor}]`);
   }
 
-  // Filter distance within radius and sort in distance (closest) order
-  if (latlng?.length === 2) {
+  // Filter distance within radius and sort in distance (closest) order.
+  // Excluded iOS app review testing account.
+  if (
+    latlng?.length === 2 && userModel.uid !== "94XTmSIX0sdIVU3dgN6c7vrg9cK2") {
     const latlngStr = latlng.join(", ");
 
     searchParams.append("filter_by", `latlng:(${latlngStr},50 km)`);
